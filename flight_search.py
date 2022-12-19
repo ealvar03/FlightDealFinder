@@ -1,11 +1,9 @@
 import requests
-
-from data_manager import SHEETY_ENDPOINT
 from flight_data import FlightData
 from datetime import datetime, timedelta
 
 HEADERS = {
-    "apikey": "Your API key"
+    "apikey": "Your Api Key"
 }
 TEQUILA_ENDPOINT = "https://api.tequila.kiwi.com"
 

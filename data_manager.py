@@ -1,10 +1,22 @@
 from flight_search import FlightSearch
 import requests
 
-SHEETY_ENDPOINT = "https://api.sheety.co/a0c55b0295b015ec40122f99a8becedd/flightDeals/prices"
+SHEETY_ENDPOINT = "Sheety Endpoint"
 
 
 class DataManager:
+
+    def __init__(self):
+        self.dest_data = {}
+
+    def get_destination_data(self):
+        """
+        It retrieves the information from the Google sheet using the Sheety API call.
+        """
+        response = requests.get(url=SHEETY_ENDPOINT)
+        result = response.json()
+        self.dest_data = result['prices']
+        return self.dest_data
 
     def add_iata_code(self):
         """
@@ -12,10 +24,8 @@ class DataManager:
         Google sheet
         :return: updated Google sheet
         """
-        response = requests.get(url=SHEETY_ENDPOINT)
-        result = response.json()
         flight_searcher = FlightSearch()
-        for d in result['prices']:
+        for d in self.dest_data:
             params = {
                 "price": {
                     "iataCode": flight_searcher.get_iata_code_from_teq(d['city'])
