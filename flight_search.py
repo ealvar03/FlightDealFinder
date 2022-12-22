@@ -1,9 +1,10 @@
 import requests
 from flight_data import FlightData
 from datetime import datetime, timedelta
+from pprint import pprint
 
 HEADERS = {
-    "apikey": "Your Api Key"
+    "apikey": "API Key"
 }
 TEQUILA_ENDPOINT = "https://api.tequila.kiwi.com"
 
@@ -15,6 +16,7 @@ class FlightSearch:
          It gets the iata code from the Tequila flight API that corresponds to the selected city when is called.
         :return: iata code
         """
+
         params = {
             "term": city
         }
@@ -28,6 +30,7 @@ class FlightSearch:
         :param destination_iata_city: The corresponding city from the Google sheet.
         :return: the data from the Tequila API that corresponds with all the requirements predefined as parameters
         """
+
         tomorrow = datetime.now() + timedelta(days=1)
         six_months = datetime.now() + timedelta(days=(6 * 30))
         params = {
@@ -46,15 +49,32 @@ class FlightSearch:
         try:
             data = tequila_response.json()['data'][0]
         except IndexError:
-            print(f"No flights found for {destination_iata_city}.")
-            return None
-
-        flight_data = FlightData(
-            price=data['price'],
-            departure_city=data['route'][0]['cityFrom'],
-            departure_airport=data['route'][0]['flyFrom'],
-            destination_city=data['route'][0]['cityTo'],
-            destination_airport=data['route'][0]['flyTo'],
-            arrival_date=data['route'][0]['local_departure'].split("T")[0],
-            departure_date=data['route'][1]['local_departure'].split("T")[0])
-        return flight_data
+            params['max_stopovers'] = 1
+            response = requests.get(url=f"{TEQUILA_ENDPOINT}/v2/search", params=params, headers=HEADERS)
+            try:
+                data = response.json()['data'][0]
+                pprint(data)
+            except IndexError:
+                return None
+            else:
+                flight_data = FlightData(
+                    price=data['price'],
+                    departure_city=data['route'][0]['cityFrom'],
+                    departure_airport=data['route'][0]['flyFrom'],
+                    destination_city=data['route'][0]['cityTo'],
+                    destination_airport=data['route'][0]['flyTo'],
+                    arrival_date=data['route'][0]['local_departure'].split("T")[0],
+                    departure_date=data['route'][1]['local_departure'].split("T")[0],
+                    stop_overs=1,
+                    via_city=data['route'][0]['cityTo'])
+                return flight_data
+        else:
+            flight_data = FlightData(
+                price=data['price'],
+                departure_city=data['route'][0]['cityFrom'],
+                departure_airport=data['route'][0]['flyFrom'],
+                destination_city=data['route'][0]['cityTo'],
+                destination_airport=data['route'][0]['flyTo'],
+                arrival_date=data['route'][0]['local_departure'].split("T")[0],
+                departure_date=data['route'][1]['local_departure'].split("T")[0])
+            return flight_data
